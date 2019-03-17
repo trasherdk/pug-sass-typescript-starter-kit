@@ -1,15 +1,11 @@
-# Riiiads Starter Kit
+# Pug Sass Typescript Gulp Starter Kit
 
-A starter kit for compiling Sass, Pug and running a dev server.
-Now also with typescript compiler.
-Created by Riad ZT riiiaddesign@gmail.com
+A starter kit for compiling Pug, Sass, Typescript and running a dev server.
 
 This package is inspired by the Traversy Media and Dev Tips starter kits.
 Check out the starter kits they are awesome.
 
-
 TM: https://github.com/bradtraversy/sass_starter_pack
-
 
 DevTips: https://github.com/DevTips/DevTips-Starter-Kit
 
