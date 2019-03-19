@@ -1,122 +1,216 @@
-const gulp        = require('gulp');
-const browserSync = require('browser-sync').create();
-const sass        = require('gulp-sass');
-const pug         = require('gulp-pug');
-const uglify      = require('gulp-uglify');
-const imageMin    = require('gulp-imagemin');
-const concat      = require('gulp-concat');
-const ts          = require('gulp-typescript');
+const autoprefixer = require("autoprefixer");
+const browsersync = require("browser-sync").create();
+const cp          = require("child_process");
+const cssnano     = require("cssnano");
+const del         = require("del");
+const eslint      = require("gulp-eslint");
+const gulp        = require("gulp");
+const imagemin    = require("gulp-imagemin");
+const sass        = require("gulp-sass");
+const sasslint    = require("gulp-sass-lint");
+const pug         = require("gulp-pug");
+const puglint     = require("gulp-pug-lint2");
+const plumber     = require("gulp-plumber");
+const postcss     = require("gulp-postcss");
+const rename      = require("gulp-rename");
+const uglify      = require("gulp-uglify");
+const newer       = require("gulp-newer");
+const concat      = require("gulp-concat");
+const ts          = require("gulp-typescript");
 const tsProject   = ts.createProject("tsconfig.json");
-const del         = require('del');
+const webpack     = require("webpack");
+const webpackconfig = require("./webpack.config.js");
+const webpackstream = require("webpack-stream");
+
+// BrowserSync
+function browserSync(done) {
+    browsersync.init({
+      server: {
+        baseDir: "./site/"
+      },
+      port: 3000
+    });
+    done();
+}
+
+// BrowserSync Reload
+function browserSyncReload(done) {
+    browsersync.reload();
+    done();
+}
+
+// Clean assets
+function clean() {
+    return del(["./site/**/*","./dist/**/*"]);
+}
+
+// Optimize Images
+function images() {
+    return gulp
+        .src("./src/assets/img/**/*")
+        .pipe(newer("./site/assets/img"))
+        .pipe(
+        imagemin([
+            imagemin.gifsicle({ interlaced: true }),
+            imagemin.jpegtran({ progressive: true }),
+            imagemin.optipng({ optimizationLevel: 5 }),
+            imagemin.svgo({
+            plugins: [
+                {
+                removeViewBox: false,
+                collapseGroups: true
+                }
+            ]
+            })
+        ])
+        )
+        .pipe(gulp.dest("./site/assets/img"));
+}
+
+// CSS task
+function css() {
+    return gulp
+        .src("./src/scss/**/*.scss")
+        .pipe(plumber())
+        .pipe(sass({ outputStyle: "expanded" }))
+        .pipe(gulp.dest("./site/assets/css/"))
+        .pipe(rename({ suffix: ".min" }))
+        .pipe(postcss([autoprefixer(), cssnano()]))
+        .pipe(gulp.dest("./site/assets/css/"))
+        .pipe(browsersync.stream());
+}
 
 // Compile Pug
-gulp.task('pug', () => {
-    return gulp.src('src/pug/*.pug')
+function pug2html() {
+    return gulp
+        .src("src/pug/**/*.pug")
+        .pipe(puglint({failOnError: true}))
         .pipe(pug({
-          doctype: 'html',
-          pretty: false
+          doctype: "html",
+          pretty: true
         }))
-        .pipe(gulp.dest('./src'));
-});
+        .pipe(gulp.dest("./site"));
+}
 
 // Compile Sass & Inject Into Browser
-gulp.task('sass', () => {
-    return gulp.src(['src/scss/*.sass'])
+function sass2css() {
+    return gulp
+        .src(["src/scss/**/*.sass"])
+        .pipe(sasslint())
+        .pipe(sasslint.format())
+        .pipe(sasslint.failOnError())
         .pipe(sass())
-        .pipe(gulp.dest("src/assets/css"))
-        .pipe(browserSync.stream());
-});
+        .pipe(gulp.dest("site/assets/css"))
+        .pipe(browsersync.stream());
+}
 
-gulp.task("typescript", function () {
-    return tsProject.src()
+// Compile typescript
+function typescript() {
+    return tsProject
+        .src()
         .pipe(tsProject())
         .js.pipe(gulp.dest("src/assets/js"));
-});
+}
 
-// Watch Sass, Pug & Serve
-gulp.task('serve', ['sass', 'pug', 'typescript'], () => {
-    browserSync.init({
-        server: "./src"
-    })
-    gulp.watch(['src/pug/*.pug'], ['pug']).on('change', browserSync.reload);
-    gulp.watch(['src/scss/**/*'], ['sass']).on('change', browserSync.reload);
-    gulp.watch(['src/assets/js/main.ts'], ['typescript']).on('change', browserSync.reload);
-});
+// Lint js scripts
+function scriptsLint() {
+    return gulp
+        .src(["./assets/js/**/*", "./gulpfile.js"])
+        .pipe(plumber())
+        .pipe(eslint())
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError());
+}
+
+// Transpile, concatenate and minify scripts
+function scripts() {
+    return (
+        gulp
+        .src(["./assets/js/**/*"])
+        .pipe(plumber())
+        //.pipe(webpackstream(webpackconfig, webpack))
+        // folder only, filename is specified in webpack config
+        .pipe(gulp.dest("./site/assets/js/"))
+        .pipe(browsersync.stream())
+    );
+}
+
+// Watch files
+function watchFiles() {
+    gulp.watch("./src/pug/**/*", gulp.series(pug2html, browserSyncReload));
+    gulp.watch("./src/scss/**/*.sass", sass2css);
+    gulp.watch("./src/scss/**/*.scss", css);
+    gulp.watch("./src/assets/js/*.js", gulp.series(scriptsLint, scripts));
+    gulp.watch("./src/assets/ts/*.ts", gulp.series(typescript, scriptsLint, scripts));
+    gulp.watch("./src/assets/img/**/*", images);
+/*
+    gulp.watch(
+        [
+        ],
+        gulp.series(jekyll, browserSyncReload)
+    );
+*/
+}
+
+// define complex tasks
+const tscript = gulp.series(typescript, scriptsLint, scripts);
+const jscript = gulp.series(scriptsLint, scripts);
+const watch = gulp.parallel(watchFiles, browserSync);
+const build = gulp.series(clean, tscript, jscript, gulp.parallel(pug2html, sass2css, css, images), watch);
+
+// export tasks
+exports.images = images;
+exports.pug2html = pug2html;
+exports.sass2css = sass2css
+exports.css = css;
+exports.tscript = tscript;
+exports.jscript = jscript;
+exports.clean = clean;
+exports.build = build;
+exports.watch = watch;
+exports.default = build;
+
 // Default Task
-gulp.task('default', ['serve','help']);
+// gulp.task("default", gulp.series("pug","sass","typescript","serve", () => {}));
 
-// **************************No Pug compiling************************************
-// Watch Sass & Serve
-gulp.task('serve-no-pug', ['sass', 'copyNoPugHtml'], () => {
-    browserSync.init({
-        server: "./src"
-    })
-    gulp.watch(['src/scss/**/*'], ['sass']).on('change', browserSync.reload)
-    gulp.watch(['src/no-pug/*.html']).on('change', () => {
-      return gulp.src(['src/no-pug/*.html'])
-          .pipe(gulp.dest('src'));
-    });
-});
-// Copy index.html file from no-pug folder
-gulp.task('copyNoPugHtml', () => {
-    return gulp.src(['src/no-pug/*.html'])
-        .pipe(gulp.dest('src'));
-});
-gulp.task('no-pug', ['copyNoPugHtml', 'serve-no-pug', 'help']);
+// ********************************************************************************
+// This is the Build part it creates the dist folder and readys all the files for deployment
 // ********************************************************************************
 
-// This is the Build part it creates the dist folder and readys all the files for deployment
-
 // Copy HTML to dist folder
-gulp.task('copyHtml', () => {
-    return gulp.src(['src/*.html'])
-        .pipe(gulp.dest('dist'));
+gulp.task("copyHtml", () => {
+    return gulp.src(["src/*.html"])
+        .pipe(gulp.dest("dist"));
 });
+
 // Copy Css to dist folder
-gulp.task('copyCSS', () => {
-    return gulp.src(['src/assets/css/*.css'])
-        .pipe(gulp.dest('dist/assets/css'));
+gulp.task("copyCSS", () => {
+    return gulp.src(["src/assets/css/*.css"])
+        .pipe(gulp.dest("dist/assets/css"));
 });
+
 // ImageMin
-gulp.task('imageMin', () => {
-    return gulp.src(['src/assets/img/*'])
+gulp.task("imageMin", () => {
+    return gulp.src(["src/assets/img/*"])
         .pipe(imageMin())
-        .pipe(gulp.dest('dist/assets/img'));
+        .pipe(gulp.dest("dist/assets/img"));
 });
+
 // Minify, concat js files and copy them to dist folder
-gulp.task('scripts', () => {
-    return gulp.src(['src/assets/js/*.js'])
-        .pipe(concat('main.js'))
+gulp.task("scripts", () => {
+    return gulp.src(["src/assets/js/*.js"])
+        .pipe(concat("main.js"))
         .pipe(uglify())
-        .pipe(gulp.dest('dist/assets/js'));
+        .pipe(gulp.dest("dist/assets/js"));
 });
 
 // Builds to dist folder, ready to deploy
-gulp.task('build', ['imageMin', 'scripts', 'copyHtml', 'copyCSS']);
+gulp.task("build", gulp.parallel(["imageMin", "scripts", "copyHtml", "copyCSS"]));
 
 // Clean the build folder
-gulp.task('clean', () => {
-  console.log('-> Cleaning dist folder')
+gulp.task("clean", () => {
+  console.log("-> Cleaning dist folder")
   del([
-    'dist'
+    "dist"
   ]);
-});
-
-// Help Task
-gulp.task('help', () => {
-  console.log('');
-  console.log('===== Help for Riiiad Starter Kit =====');
-  console.log('');
-  console.log('Usage: gulp [command]');
-  console.log('The commands are the following');
-  console.log('-------------------------------------------------------');
-  console.log('        typescript: Runs the typescript compiler');
-  console.log('        clean: Removes all the compiled files on ./dist');
-  console.log('        copyCss: Copy the complied css files');
-  console.log('        copyHtml: Copy the Html files');
-  console.log('        imageMin: Copy the newer images to the build folder');
-  console.log('        build: Creates the dist folder if not already create and copy all files in it');
-  console.log('        no-pug: If you do not want to use pug');
-  console.log('        help: Print this message');
-  console.log('');
 });

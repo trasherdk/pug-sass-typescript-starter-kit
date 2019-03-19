@@ -1,3 +1,8 @@
+# dev and dist versions
+site
+build
+dist
+
 # Logs
 logs
 *.log
