@@ -1,9 +1,14 @@
 # Pug Sass Typescript Gulp Starter Kit
 
+<<<<<<< HEAD
 A starter kit for compiling Pug, Sass/Scss, Typescript and running a dev server.
 * This can be used for static website generation, but will not take advance
   of pug's many features for dynamic contents.
   
+=======
+A starter kit for compiling Pug, Sass, Typescript and running a dev server.
+
+>>>>>>> 524508f67df6bd3379928028c475bbd76506c31f
 ### Version
 
 1.3.0
