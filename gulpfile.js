@@ -115,7 +115,7 @@ function typescript() {
 // Lint js scripts
 function scriptsLint() {
     return gulp
-        .src(["./assets/js/**/*", "./gulpfile.js"])
+        .src(["./src/assets/js/**/*", "./gulpfile.js"])
         .pipe(plumber())
         .pipe(eslint())
         .pipe(eslint.format())
@@ -124,15 +124,13 @@ function scriptsLint() {
 
 // Transpile, concatenate and minify scripts
 function scripts() {
-    return (
-        gulp
-        .src(["./assets/js/**/*"])
+    return gulp
+        .src(["./src/assets/js/**/*"])
         .pipe(plumber())
         //.pipe(webpackstream(webpackconfig, webpack))
         // folder only, filename is specified in webpack config
-        .pipe(gulp.dest("./site/assets/js/"))
-        .pipe(browsersync.stream())
-    );
+        .pipe(gulp.dest("./site/assets/js"))
+        .pipe(browsersync.stream());
 }
 
 // Watch files
@@ -141,7 +139,7 @@ function watchFiles() {
     gulp.watch("./src/scss/**/*.sass", sass2css);
     gulp.watch("./src/scss/**/*.scss", css);
     gulp.watch("./src/assets/js/*.js", gulp.series(scriptsLint, scripts));
-    gulp.watch("./src/assets/ts/*.ts", gulp.series(typescript, scriptsLint, scripts));
+    gulp.watch("./src/assets/ts/*.ts", gulp.series(typescript));
     gulp.watch("./src/assets/img/**/*", images);
 /*
     gulp.watch(
@@ -156,7 +154,7 @@ function watchFiles() {
 const tscript = gulp.series(typescript, scriptsLint, scripts);
 const jscript = gulp.series(scriptsLint, scripts);
 const watch = gulp.parallel(watchFiles, browserSync);
-const build = gulp.series(clean, tscript, jscript, gulp.parallel(pug2html, sass2css, css, images), watch);
+const build = gulp.series(clean, gulp.parallel(pug2html, sass2css, css, images), tscript, jscript, watch);
 
 // export tasks
 exports.images = images;

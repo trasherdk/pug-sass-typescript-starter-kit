@@ -23,7 +23,6 @@
   "main": "index.js",
   "scripts": {
     "start": "gulp",
-    "jekyll": "gulp jekyll",
     "build": "gulp build",
     "clean": "gulp clean"
   },
