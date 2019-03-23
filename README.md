@@ -1,14 +1,9 @@
 # Pug Sass Typescript Gulp Starter Kit
 
-<<<<<<< HEAD
 A starter kit for compiling Pug, Sass/Scss, Typescript and running a dev server.
 * This can be used for static website generation, but will not take advance
   of pug's many features for dynamic contents.
   
-=======
-A starter kit for compiling Pug, Sass, Typescript and running a dev server.
-
->>>>>>> 524508f67df6bd3379928028c475bbd76506c31f
 ### Version
 
 1.3.0
@@ -22,7 +17,6 @@ Install the dependencies:
     "acorn": "^6.1.1",
     "autoprefixer": "^9.5.0",
     "browser-sync": "^2.18.13",
-    "child_process": "^1.0.2",
     "cssnano": "^4.1.10",
     "del": "^3.0.0",
     "gulp": "^4.0.0",

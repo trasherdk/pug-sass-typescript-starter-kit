@@ -30,7 +30,6 @@
     "acorn": "^6.1.1",
     "autoprefixer": "^9.5.0",
     "browser-sync": "^2.18.13",
-    "child_process": "^1.0.2",
     "cssnano": "^4.1.10",
     "del": "^3.0.0",
     "gulp": "^4.0.0",
@@ -53,11 +52,11 @@
     "webpack-stream": "^5.2.1"
   },
   "eslintConfig": {
-      "parserOptions": {
-        "ecmaVersion": 2017
+    "parserOptions": {
+      "ecmaVersion": 2017
     },
     "env": {
-        "es6": true
+      "es6": true
     }
   }
 }
