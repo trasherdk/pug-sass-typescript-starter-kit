@@ -16,11 +16,6 @@ const rename      = require("gulp-rename");
 const uglify      = require("gulp-uglify");
 const newer       = require("gulp-newer");
 const concat      = require("gulp-concat");
-const ts          = require("gulp-typescript");
-const tsProject   = ts.createProject("tsconfig.json");
-const webpack     = require("webpack");
-const webpackconfig = require("./webpack.config.js");
-const webpackstream = require("webpack-stream");
 
 // BrowserSync
 function browserSync(done) {
@@ -50,19 +45,19 @@ function images() {
         .src("./src/assets/img/**/*")
         .pipe(newer("./site/assets/img"))
         .pipe(
-        imagemin([
-            imagemin.gifsicle({ interlaced: true }),
-            imagemin.jpegtran({ progressive: true }),
-            imagemin.optipng({ optimizationLevel: 5 }),
-            imagemin.svgo({
-            plugins: [
-                {
-                removeViewBox: false,
-                collapseGroups: true
-                }
-            ]
-            })
-        ])
+            imagemin([
+	            imagemin.gifsicle({ interlaced: true }),
+	            imagemin.jpegtran({ progressive: true }),
+	            imagemin.optipng({ optimizationLevel: 5 }),
+	            imagemin.svgo({
+	            plugins: [
+	                {
+		                removeViewBox: false,
+		                collapseGroups: true
+	                }
+	            ]
+	            })
+            ])
         )
         .pipe(gulp.dest("./site/assets/img"));
 }
@@ -104,14 +99,6 @@ function sass2css() {
         .pipe(browsersync.stream());
 }
 
-// Compile typescript
-function typescript() {
-    return tsProject
-        .src()
-        .pipe(tsProject())
-        .js.pipe(gulp.dest("src/assets/js"));
-}
-
 // Lint js scripts
 function scriptsLint() {
     return gulp
@@ -127,8 +114,6 @@ function scripts() {
     return gulp
         .src(["./src/assets/js/**/*"])
         .pipe(plumber())
-        //.pipe(webpackstream(webpackconfig, webpack))
-        // folder only, filename is specified in webpack config
         .pipe(gulp.dest("./site/assets/js"))
         .pipe(browsersync.stream());
 }
@@ -139,7 +124,6 @@ function watchFiles() {
     gulp.watch("./src/scss/**/*.sass", sass2css);
     gulp.watch("./src/scss/**/*.scss", css);
     gulp.watch("./src/assets/js/*.js", gulp.series(scriptsLint, scripts));
-    gulp.watch("./src/assets/ts/*.ts", gulp.series(typescript));
     gulp.watch("./src/assets/img/**/*", images);
 /*
     gulp.watch(
@@ -151,17 +135,15 @@ function watchFiles() {
 }
 
 // define complex tasks
-const tscript = gulp.series(typescript, scriptsLint, scripts);
 const jscript = gulp.series(scriptsLint, scripts);
 const watch = gulp.parallel(watchFiles, browserSync);
-const build = gulp.series(clean, gulp.parallel(pug2html, sass2css, css, images), tscript, jscript, watch);
+const build = gulp.series(clean, gulp.parallel(pug2html, sass2css, css, images), jscript, watch);
 
 // export tasks
 exports.images = images;
 exports.pug2html = pug2html;
 exports.sass2css = sass2css
 exports.css = css;
-exports.tscript = tscript;
 exports.jscript = jscript;
 exports.clean = clean;
 exports.build = build;
