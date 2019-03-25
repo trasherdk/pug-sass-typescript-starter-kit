@@ -34,12 +34,8 @@ Install the dependencies:
     "gulp-typescript": "^4.0.2",
     "gulp-uglify": "^3.0.0",
     "pug-lint": "^2.5.0",
-    "typescript": "^2.9.2",
-    "webpack": "^4.29.6",
-    "webpack-stream": "^5.2.1"
   },
 ```
-* ### At this point webpack is not used.
 
 ```sh
 $ npm install
@@ -57,10 +53,7 @@ This kit works with pug by default. You change the pug files in the pug folder a
 
 In the assets folder you upload the images and js files this folder will be copied to the build folder.
 
-With the last version typescript was added. You can use it or not just be careful if you save changes to the main.ts file the main.js will be overwritten. Best is if you DO NOT want to use typescript just delete the
-main.ts file and it will not be compiled to main.js.
-
-Never change the src/index.html or the assets/css/ files because it will be overwritten with the compiled files.
+Edit files in `./src/**/*` and after check/compile, files are server from `./site/**/*`
 
 ### Run
 
